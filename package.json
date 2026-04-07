@@ -1,0 +1,16 @@
+{
+  "name": "formations",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc --noEmit && node esbuild.config.mjs",
+    "typecheck": "tsc --noEmit",
+    "watch": "node esbuild.config.mjs --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.0"
+  }
+}
