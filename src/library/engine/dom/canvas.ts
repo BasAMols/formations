@@ -38,6 +38,5 @@ export class Canvas extends Dom<'canvas'> {
     preRender(): void {
         super.preRender(this);
         this.clear.all();
-        this.draw.rect(Vector2.zero(), this.size, RenderColor.black());
     }
 }

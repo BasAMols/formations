@@ -13,13 +13,11 @@ export class Dom<T extends keyof HTMLElementTagNameMap = keyof HTMLElementTagNam
     setStyle(style: Partial<CSSStyleDeclaration>) {
         Object.assign(this._domElement.style, style);
     }
-    append<U extends keyof HTMLElementTagNameMap>(element: Dom<U>) {
-        this._domElement.appendChild(element._domElement);
-        return element;
-    }
-    child<U extends keyof HTMLElementTagNameMap>(tag: U = 'div' as U) {
-        const element = new Dom(tag);
-        this.append(element);
+    append(element: Dom<keyof HTMLElementTagNameMap> | Actor) {
+        if (element instanceof Dom) {
+            this._domElement.appendChild(element.domElement);
+        }
+        super.append(element);
         return element;
     }
 }

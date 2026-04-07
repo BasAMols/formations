@@ -1,12 +1,28 @@
 import type { Canvas } from "./dom/canvas.js";
 import { Transform } from "./math/transform.js";
+import type { Vector2 } from "./math/vector2.js";
+
+
+export interface ActorInterface {
+    size?: Vector2;
+    position?: Vector2;
+    rotation?: number;
+    scale?: Vector2;
+    anchorPoint?: Vector2;
+}
 
 export class Actor {
     protected children: Actor[] = [];
     protected _alive: boolean = true;
-    protected transform: Transform;
-    constructor() {
-        this.transform = new Transform();
+    public transform: Transform;
+    constructor(props: ActorInterface = {}) {
+        this.transform = new Transform({
+            size: props.size,
+            position: props.position,
+            rotation: props.rotation,
+            scale: props.scale,
+            anchorPoint: props.anchorPoint,
+        });
     }
 
     append(element: Actor) {

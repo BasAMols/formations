@@ -33,4 +33,7 @@ export class RenderColor {
     static yellow() {
         return new RenderColor(1, 1, 0, 1);
     }
+    toString() {
+        return `rgba(${this.r * 255}, ${this.g * 255}, ${this.b * 255}, ${this.a})`;
+    }
 }
