@@ -2,24 +2,35 @@ import { RenderColor } from "../library/engine/color.js";
 import type { Canvas } from "../library/engine/dom/canvas.js";
 import { Actor } from "../library/engine/element.js";
 import { Vector2 } from "../library/engine/math/vector2.js";
-import { DisciplineManager } from "./disciplines/disciplineManager.js";
-import { FollowDiscipline } from "./disciplines/follow.js";
-import { WalkDiscipline } from "./disciplines/walk.js";
+import type { Discipline } from "./disciplines/discipline.js";
+import { LeaderDiscipline } from "./disciplines/examples/leader.js";
+import { FollowerDiscipline } from "./disciplines/examples/follower.js";
 import { Unit } from "./unit.js";
 
+const UNIT_COUNT = 10;
+const LEADER_COUNT = 2;
+
 export class Game extends Actor {
-    private disciplineManager: DisciplineManager;
     private units: Unit[] = [];
+
     constructor() {
         super();
-        this.disciplineManager = new DisciplineManager();
-        const walkDiscipline = this.disciplineManager.addDiscipline(new WalkDiscipline());
-        const leader = this.append(new Unit(0, walkDiscipline)) as Unit;
-        
-        const followDiscipline = this.disciplineManager.addDiscipline(new FollowDiscipline(leader)) as FollowDiscipline;
-        for (let i = 1; i < 10; i++) {
-            const unit = this.append(new Unit(40 * i)) as Unit;
-            this.disciplineManager.switchDiscipline(unit, "follow");
+
+        const followerDiscipline = new FollowerDiscipline({
+            getLeaders: () => leaderDiscipline.getTargets(),
+            leaderDiscipline: null,
+        });
+
+        const leaderDiscipline = new LeaderDiscipline({
+            followerDiscipline,
+        });
+
+        followerDiscipline.props.leaderDiscipline = leaderDiscipline;
+
+        for (let i = 0; i < UNIT_COUNT; i++) {
+            const unit = this.append(new Unit(60 * i)) as Unit;
+            this.units.push(unit);
+            unit.assignDiscipline(i < LEADER_COUNT ? leaderDiscipline : followerDiscipline);
         }
     }
 
@@ -30,6 +41,16 @@ export class Game extends Actor {
 
     tick(): void {
         super.tick();
-        this.disciplineManager.executeDisciplines();
+        this.units = this.units.filter(u => u.alive);
+
+        const seen = new Set<Discipline<any>>();
+        const disciplines: Discipline<any>[] = [];
+        for (const unit of this.units) {
+            if (unit.discipline && !seen.has(unit.discipline)) {
+                seen.add(unit.discipline);
+                disciplines.push(unit.discipline);
+            }
+        }
+        disciplines.sort((a, b) => a.order - b.order).forEach(d => d.run());
     }
 }

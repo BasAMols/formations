@@ -5,17 +5,45 @@ import { Vector2 } from "../library/engine/math/vector2.js";
 import type { Discipline } from "./disciplines/discipline.js";
 
 export class Unit extends Actor {
-    activeDiscipline: string;
+    order: number = 0;
+    discipline: Discipline<any> | null = null;
+    units: Unit[] = [];
+    parent: Unit | null = null;
     color: RenderColor = RenderColor.white();
-    constructor(x: number, discipline?: Discipline) {
-        super({
-            size: new Vector2(10, 10),
-        });
+
+    constructor(x: number = 0, y: number = 0) {
+        super({ size: new Vector2(10, 10) });
         this.transform.position.x = x;
-        if (discipline) {
-            this.activeDiscipline = discipline.name;
-            discipline.addTarget(this);
-        }
+        this.transform.position.y = y;
+    }
+
+    assignDiscipline(discipline: Discipline<any> | null): void {
+        this.discipline?.removeTarget(this);
+        this.discipline = discipline;
+        discipline?.addTarget(this);
+    }
+
+    add(child: Unit): void {
+        child.parent?.remove(child);
+        this.units.push(child);
+        child.parent = this;
+    }
+
+    remove(child: Unit): void {
+        child.assignDiscipline(null);
+        this.units = this.units.filter(u => u !== child);
+        child.parent = null;
+    }
+
+    collectData(): void {}
+
+    // Discipline system drives logic — opt out of Actor tick propagation
+    gameTick(): void {}
+
+    destroy(): void {
+        this.assignDiscipline(null);
+        this.parent?.remove(this);
+        super.destroy();
     }
 
     render(canvas: Canvas): void {

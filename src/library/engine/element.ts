@@ -14,6 +14,7 @@ export interface ActorInterface {
 export class Actor {
     protected children: Actor[] = [];
     protected _alive: boolean = true;
+    get alive(): boolean { return this._alive; }
     public transform: Transform;
     constructor(props: ActorInterface = {}) {
         this.transform = new Transform({
