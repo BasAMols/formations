@@ -1,0 +1,16 @@
+body, html, div, input {
+    all: unset; 
+}
+
+body, html {
+    overflow: hidden; 
+    width: 100vw;
+    height: 100vw; 
+    background: black;
+}
+
+body > canvas {
+    position: abolute; 
+    top: 0px; 
+    left: 0px;
+}

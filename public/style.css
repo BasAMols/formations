@@ -1,0 +1,17 @@
+/* App styles */
+body, html, div, input {
+    all: unset; 
+}
+
+body, html {
+    overflow: hidden; 
+    width: 100vw;
+    height: 100vh; 
+    background: black;
+}
+
+body > canvas {
+    position: absolute; 
+    top: 0px; 
+    left: 0px;
+}
