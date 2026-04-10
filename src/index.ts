@@ -1,2 +1,2 @@
-import { Main } from "./library/engine/main.js";
+import { Main } from "./engine/main.js";
 const main = new Main();
