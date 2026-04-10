@@ -1,6 +1,6 @@
-
-import { RenderColor } from "../color.js";
-import { Vector2 } from "../math/vector2.js";
+import { Vec2 } from "planck";
+import type { RenderController } from "../controller.js";
+import type { Actor } from "../element.js";
 import { Dom } from "./dom.js";
 import { Renderer } from "./ren.js";
 
@@ -14,8 +14,8 @@ export class Canvas extends Dom<'canvas'> {
     public get clear(): Renderer['clear'] {
         return this.renderer.clear;
     }
-    public get size(): Vector2 {
-        return new Vector2(this._domElement.clientWidth, this._domElement.clientHeight);
+    public get size(): Vec2 {
+        return new Vec2(this._domElement.clientWidth, this._domElement.clientHeight);
     }
     constructor() {
         super('canvas');
@@ -35,8 +35,18 @@ export class Canvas extends Dom<'canvas'> {
         this._domElement.style.height = `${window.innerHeight}px`;
     }
 
-    preRender(): void {
-        super.preRender(this);
+    renderFlat(renderables: Actor[]): void {
         this.clear.all();
+        renderables.sort((a, b) => (a.layer - b.layer) || (a.treeOrder - b.treeOrder));
+        for (const actor of renderables) {
+            this.ctx.save();
+            const p = actor.worldTransform.p;
+            this.ctx.translate(p.x, p.y);
+            this.ctx.rotate(actor.worldTransform.q.getAngle());
+            for (const c of actor.getControllers<RenderController>('render')) {
+                c.render(actor, this);
+            }
+            this.ctx.restore();
+        }
     }
 }

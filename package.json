@@ -14,6 +14,8 @@
     "typescript": "^5.7.0"
   },
   "dependencies": {
+    "@types/pathfinding": "^0.1.0",
+    "pathfinding": "^0.4.18",
     "planck": "^1.4.2"
   }
 }

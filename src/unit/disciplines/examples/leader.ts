@@ -1,7 +1,15 @@
+import { Vec2 } from "planck";
 import { RenderColor } from "../../../library/engine/color.js";
+import { Actor } from "../../../library/engine/element.js";
+import { PhysicsController } from "../../../library/engine/physics.js";
+import { CircleRenderer } from "../../renderers.js";
 import { Discipline, type DisciplineInstance, type DisciplineProps } from "../discipline.js";
-import type { Unit } from "../../unit.js";
-import type { FollowerDiscipline } from "./follower.js";
+import { DisciplineController } from "../controller.js";
+import { FollowerDiscipline } from "./follower.js";
+
+const SPEED = 60;
+const LEADER_ACCEL = 0.08;
+const ARRIVAL_THRESHOLD = 30;
 
 export interface LeaderDisciplineProps extends DisciplineProps {
     followerDiscipline: FollowerDiscipline;
@@ -10,21 +18,35 @@ export interface LeaderDisciplineProps extends DisciplineProps {
 export class LeaderDiscipline extends Discipline {
     readonly name = "leader";
     readonly order = 0;
+    public facing: number = 0;
 
     constructor(private leaderProps: LeaderDisciplineProps) {
-        super();
+        super(leaderProps);
     }
 
-    create(unit: Unit): DisciplineInstance {
+    create(actor: Actor): DisciplineInstance {
         const discipline = this;
-        return new (class implements DisciplineInstance {
-            constructor(private unit: Unit) {}
+        const physics = actor.getControllers<PhysicsController>('physics')[0];
+        const waypoints = [new Vec2(200, 780), new Vec2(2900, 780)];
+        let waypointIdx = 0;
 
+        return new (class implements DisciplineInstance {
             execute(): void {
-                this.unit.color = RenderColor.green();
-                this.unit.transform.position.y -= 0.5;
-                if (this.unit.transform.position.y < 0) {
-                    this.unit.transform.position.y = $.canvas.size.y;
+                if (!physics) return;
+
+                if (!physics.hasPath) {
+                    const target = waypoints[waypointIdx % waypoints.length];
+                    const dist = Vec2.sub(target, physics.getPosition()).length();
+                    if (dist < ARRIVAL_THRESHOLD) {
+                        waypointIdx++;
+                    }
+                    physics.moveTo(waypoints[waypointIdx % waypoints.length]);
+                }
+                physics.tick(SPEED, LEADER_ACCEL);
+
+                const vel = physics.getVelocity();
+                if (vel.length() > 1) {
+                    discipline.facing = Math.atan2(vel.y, vel.x);
                 }
 
                 const followers = discipline.leaderProps.followerDiscipline.units;
@@ -52,6 +74,43 @@ export class LeaderDiscipline extends Discipline {
                     }
                 }
             }
-        })(unit);
+        })();
+    }
+}
+
+export class Squad extends Actor {
+    private static _nextGroupId = -1;
+
+    constructor(x: number, y: number) {
+        super({ position: new Vec2(x, y) });
+
+        const groupIndex = Squad._nextGroupId--;
+
+        const followerDisc = new FollowerDiscipline({
+            getLeaders: () => leaderDisc.getTargets(),
+            leaderDiscipline: null,
+        });
+        const leaderDisc = new LeaderDiscipline({ followerDiscipline: followerDisc });
+        followerDisc.props.leaderDiscipline = leaderDisc;
+
+        const leaderPhysics = new PhysicsController(30, 10);
+        leaderPhysics.filterGroupIndex = groupIndex;
+
+        const leader = new Actor({ position: new Vec2(x, y) });
+        leader.addController(new CircleRenderer(30, RenderColor.green()));
+        leader.addController(leaderPhysics);
+        leader.addController(new DisciplineController(leaderDisc));
+        this.append(leader);
+
+        for (let i = 0; i < 8; i++) {
+            const followerPhysics = new PhysicsController(30);
+            followerPhysics.filterGroupIndex = groupIndex;
+
+            const f = new Actor({ position: new Vec2(x, y + i * 70 + 70) });
+            f.addController(new CircleRenderer(30, RenderColor.blue()));
+            f.addController(followerPhysics);
+            f.addController(new DisciplineController(followerDisc));
+            this.append(f);
+        }
     }
 }

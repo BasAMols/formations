@@ -1,4 +1,4 @@
-import type { Unit } from "../unit.js";
+import type { Actor } from "../../library/engine/element.js";
 
 export interface DisciplineProps {}
 
@@ -12,57 +12,42 @@ export abstract class Discipline<TInstance extends DisciplineInstance = Discipli
     abstract readonly name: string;
     abstract readonly order: number;
 
-    private _handlers = new Map<Unit, TInstance>();
+    private _handlers = new Map<Actor, TInstance>();
+
+    constructor(_props: DisciplineProps = {}) {}
 
     get units(): TInstance[] { return [...this._handlers.values()]; }
-    getTargets(): Unit[] { return [...this._handlers.keys()]; }
+    getTargets(): Actor[] { return [...this._handlers.keys()]; }
 
-    protected getHandler(unit: Unit): TInstance | undefined {
-        return this._handlers.get(unit);
+    protected getHandler(actor: Actor): TInstance | undefined {
+        return this._handlers.get(actor);
     }
 
-    abstract create(unit: Unit): TInstance;
+    abstract create(actor: Actor): TInstance;
 
-    addTarget(unit: Unit): void {
-        this._handlers.set(unit, this.create(unit));
+    addTarget(actor: Actor): void {
+        this._handlers.set(actor, this.create(actor));
     }
 
-    removeTarget(unit: Unit): void {
-        this._handlers.get(unit)?.dispose?.();
-        this._handlers.delete(unit);
-    }
-
-    assignUnit(unit: Unit): void {
-        unit.assignDiscipline(this);
+    removeTarget(actor: Actor): void {
+        this._handlers.get(actor)?.dispose?.();
+        this._handlers.delete(actor);
     }
 
     protected collectGlobalData(): void {}
     protected runGlobalActions(): void {}
-    protected orderTargets(targets: Unit[]): Unit[] { return targets; }
+    protected orderTargets(targets: Actor[]): Actor[] { return targets; }
 
-    protected tickChildren(unit: Unit): void {
-        unit.collectData();
-        const seen = new Set<Discipline<any>>();
-        const childDisciplines: Discipline<any>[] = [];
-        for (const child of unit.units) {
-            if (child.discipline && !seen.has(child.discipline)) {
-                seen.add(child.discipline);
-                childDisciplines.push(child.discipline);
-            }
-        }
-        childDisciplines.sort((a, b) => a.order - b.order).forEach(d => d.run());
-    }
-
-    run(): void {
+    run(afterEach?: (actor: Actor) => void): void {
         this.collectGlobalData();
         this.runGlobalActions();
         const ordered = this.orderTargets(this.getTargets());
-        for (const unit of ordered) {
-            const h = this._handlers.get(unit);
+        for (const actor of ordered) {
+            const h = this._handlers.get(actor);
             if (!h) continue;
             h.gatherData?.();
             h.execute();
-            this.tickChildren(unit);
+            afterEach?.(actor);
         }
     }
 }

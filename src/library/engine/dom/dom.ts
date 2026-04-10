@@ -5,7 +5,6 @@ export class Dom<T extends keyof HTMLElementTagNameMap = keyof HTMLElementTagNam
     public get domElement(): HTMLElementTagNameMap[T] {
         return this._domElement;
     }
-    protected children: Dom[] = [];
     constructor(tag: T) {
         super();
         this._domElement = document.createElement(tag);
