@@ -10,13 +10,20 @@ export class Main {
         const canvas = new Canvas();
         const ticker = new Ticker();
         const game = new Game();
+        canvas.camera = game.camera;
         canvas.append(game);
 
         ticker.add(() => {
             const renderables: Actor[] = [];
             canvas.logicTick(Transform.identity(), renderables);
-            canvas.renderFlat(renderables);
+            canvas.renderFlat(renderables, game.camera);
         });
+
+        canvas.onClick = (screen) => {
+            const world = game.camera.screenToWorld(screen, canvas.size);
+            const actors = game.physics.queryPoint(world);
+            game.onClick(screen, world, actors);
+        };
 
         window['$'] = {
             canvas: canvas,

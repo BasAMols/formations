@@ -1,4 +1,4 @@
-import { Vec2, World, Circle, Box } from "planck";
+import { Vec2, World, Circle, Box, AABB } from "planck";
 import type { Body, Contact, ContactImpulse } from "planck";
 import { Controller, LogicController } from "./controller.js";
 import type { Actor } from "./element.js";
@@ -18,6 +18,7 @@ export class PhysicsController extends Controller {
     readonly type = 'physics';
     static readonly allowMultiple = false;
 
+    public actor: Actor | null = null;
     private _body: Body | null = null;
     private _navGrid: NavGrid | null = null;
     private _waypoints: Vec2[] = [];
@@ -30,6 +31,9 @@ export class PhysicsController extends Controller {
     constructor(public radius: number, public density: number = 1, public linearDamping: number = 0) {
         super();
     }
+
+    onAttach(actor: Actor): void { this.actor = actor; }
+    onDetach(): void { this.actor = null; }
 
     setVelocity(v: Vec2): void { this._body?.setLinearVelocity(v); }
     getVelocity(): Vec2 { return this._body?.getLinearVelocity() ?? Vec2.zero(); }
@@ -258,11 +262,15 @@ export class StaticPhysicsController extends Controller {
     readonly type = 'static-physics';
     static readonly allowMultiple = false;
 
+    public actor: Actor | null = null;
     private _body: Body | null = null;
 
     constructor(public width: number, public height: number) {
         super();
     }
+
+    onAttach(actor: Actor): void { this.actor = actor; }
+    onDetach(): void { this.actor = null; }
 
     /** @internal */
     _setBody(body: Body | null): void { this._body = body; }
@@ -309,6 +317,22 @@ export class PhysicsManagerController extends LogicController {
         }
 
         this._resolveDeadlocks();
+    }
+
+    queryPoint(point: Vec2): Actor[] {
+        const aabb = new AABB(
+            new Vec2(point.x - 0.1, point.y - 0.1),
+            new Vec2(point.x + 0.1, point.y + 0.1),
+        );
+        const found: Actor[] = [];
+        this.world.queryAABB(aabb, (fixture) => {
+            if (fixture.testPoint(point)) {
+                const pc = fixture.getBody().getUserData() as PhysicsController | StaticPhysicsController | null;
+                if (pc?.actor) found.push(pc.actor);
+            }
+            return true;
+        });
+        return found;
     }
 
     private _handlePostSolve(_contact: Contact, impulse: ContactImpulse): void {
@@ -400,6 +424,7 @@ export class PhysicsManagerController extends LogicController {
                 position: actor.position,
             });
             body.createFixture(new Box(sc.width / 2, sc.height / 2));
+            body.setUserData(sc);
 
             sc._setBody(body);
             actor.body = body;

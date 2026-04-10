@@ -1,5 +1,6 @@
 import { Vec2 } from "planck";
 import { RenderColor } from "../library/engine/color.js";
+import { Camera } from "../library/engine/camera.js";
 import { RenderController } from "../library/engine/controller.js";
 import type { Canvas } from "../library/engine/dom/canvas.js";
 import { Actor } from "../library/engine/element.js";
@@ -18,9 +19,12 @@ class BackgroundRenderer extends RenderController {
 
 export class Game extends Actor {
     public physics: PhysicsManagerController;
+    public camera: Camera;
 
     constructor() {
         super({ layer: -1 });
+
+        this.camera = new Camera(3072, 1559);
         this.addController(new BackgroundRenderer());
 
         this.physics = this.addController(new PhysicsManagerController({
@@ -84,5 +88,9 @@ export class Game extends Actor {
         // Chokepoint pillars near center gap
         this.append(new Wall(1400, 700, 80, 80, RenderColor.gray(0.4)));
         this.append(new Wall(1670, 700, 80, 80, RenderColor.gray(0.4)));
+    }
+
+    onClick(screen: Vec2, world: Vec2, actors: Actor[]): void {
+        console.log('click', { screen, world, actors });
     }
 }
