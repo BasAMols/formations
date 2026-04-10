@@ -92,31 +92,40 @@ export class NavGrid {
         return this.grid.isWalkableAt(gx, gy);
     }
 
-    findNearestWalkable(pos: Vec2): Vec2 {
+    findNearestWalkable(
+        pos: Vec2,
+        condition?: (p: Vec2) => boolean,
+        maxSamples: number = 200,
+        step: number = this.cellSize,
+    ): Vec2 | null {
         const gx = this.clampX(Math.floor(pos.x / this.cellSize));
         const gy = this.clampY(Math.floor(pos.y / this.cellSize));
-        if (this.grid.isWalkableAt(gx, gy)) return pos;
 
+        if (this.grid.isWalkableAt(gx, gy)) {
+            if (!condition || condition(pos)) return pos;
+        }
+
+        const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
         const visited = new Set<number>();
-        const queue: [number, number][] = [[gx, gy]];
         visited.add(gy * this.gridW + gx);
 
-        while (queue.length > 0) {
-            const [cx, cy] = queue.shift()!;
-            for (const [dx, dy] of [[-1,0],[1,0],[0,-1],[0,1]]) {
-                const nx = cx + dx;
-                const ny = cy + dy;
-                if (nx < 0 || nx >= this.gridW || ny < 0 || ny >= this.gridH) continue;
-                const key = ny * this.gridW + nx;
-                if (visited.has(key)) continue;
-                visited.add(key);
-                if (this.grid.isWalkableAt(nx, ny)) {
-                    return new Vec2((nx + 0.5) * this.cellSize, (ny + 0.5) * this.cellSize);
-                }
-                queue.push([nx, ny]);
+        for (let n = 1; n <= maxSamples; n++) {
+            const angle = n * GOLDEN_ANGLE;
+            const r = Math.sqrt(n) * step;
+            const nx = Math.floor((pos.x + Math.cos(angle) * r) / this.cellSize);
+            const ny = Math.floor((pos.y + Math.sin(angle) * r) / this.cellSize);
+
+            if (nx < 0 || nx >= this.gridW || ny < 0 || ny >= this.gridH) continue;
+            const key = ny * this.gridW + nx;
+            if (visited.has(key)) continue;
+            visited.add(key);
+
+            if (this.grid.isWalkableAt(nx, ny)) {
+                const world = new Vec2((nx + 0.5) * this.cellSize, (ny + 0.5) * this.cellSize);
+                if (!condition || condition(world)) return world;
             }
         }
-        return pos;
+        return null;
     }
 
     private rasterizeActors(actors: Actor[], padding: number): void {

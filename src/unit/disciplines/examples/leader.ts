@@ -7,7 +7,7 @@ import { Discipline, type DisciplineInstance, type DisciplineProps } from "../di
 import { DisciplineController } from "../controller.js";
 import { FollowerDiscipline } from "./follower.js";
 
-const SPEED = 60;
+const SPEED = 100;
 const LEADER_ACCEL = 0.08;
 const ARRIVAL_THRESHOLD = 30;
 
@@ -93,7 +93,7 @@ export class Squad extends Actor {
         const leaderDisc = new LeaderDiscipline({ followerDiscipline: followerDisc });
         followerDisc.props.leaderDiscipline = leaderDisc;
 
-        const leaderPhysics = new PhysicsController(30, 10);
+        const leaderPhysics = new PhysicsController(30, 10, 3);
         leaderPhysics.filterGroupIndex = groupIndex;
 
         const leader = new Actor({ position: new Vec2(x, y) });
@@ -103,7 +103,7 @@ export class Squad extends Actor {
         this.append(leader);
 
         for (let i = 0; i < 8; i++) {
-            const followerPhysics = new PhysicsController(30);
+            const followerPhysics = new PhysicsController(30, 1, 3);
             followerPhysics.filterGroupIndex = groupIndex;
 
             const f = new Actor({ position: new Vec2(x, y + i * 70 + 70) });

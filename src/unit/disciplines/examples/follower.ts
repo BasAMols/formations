@@ -5,11 +5,9 @@ import { Discipline, type DisciplineInstance, type DisciplineProps } from "../di
 import { DisciplineController } from "../controller.js";
 import type { LeaderDiscipline } from "./leader.js";
 
-const MAX_SPEED = 100;
-const ACCEL = 0.05;
-const SLOT_SPACING = 70;
-const MIN_PATHFIND_DIST = 40;
-const DEST_DRIFT_THRESHOLD = 80;
+const MAX_SPEED = 150;
+const ACCEL = 0.08;
+const SLOT_SPACING = 50;
 
 export interface FollowerInstance extends DisciplineInstance {
     readonly actor: Actor;
@@ -86,7 +84,6 @@ export class FollowerDiscipline extends Discipline<FollowerInstance> {
             leader: Actor | null = null;
             side: 'L' | 'R' = 'L';
             depth: number = 1;
-            private lastPathTarget: Vec2 | null = null;
 
             execute(): void {
                 if (!this.leader) {
@@ -120,42 +117,17 @@ export class FollowerDiscipline extends Discipline<FollowerInstance> {
                 const worldY =  localX * cos - localY * sin;
 
                 const leaderPos = this.leader.position;
-                const rawTarget = new Vec2(leaderPos.x + worldX, leaderPos.y + worldY);
+                const target = new Vec2(leaderPos.x + worldX, leaderPos.y + worldY);
 
                 if (!physics) return;
 
-                const target = physics.isWalkable(rawTarget)
-                    ? rawTarget
-                    : physics.findNearestWalkable(rawTarget);
-
-                const dist = Vec2.sub(target, physics.getPosition()).length();
-
-                if (dist < MIN_PATHFIND_DIST) {
-                    physics.moveToDirect(target, MAX_SPEED, ACCEL);
-                    return;
-                }
-
-                let needsPath = false;
-                if (physics.isInContact()) {
-                    needsPath = true;
-                } else if (this.lastPathTarget) {
-                    if (Vec2.sub(this.lastPathTarget, target).length() > DEST_DRIFT_THRESHOLD) {
-                        needsPath = true;
-                    }
-                } else {
-                    needsPath = true;
-                }
-
-                if (needsPath) {
-                    physics.moveTo(target);
-                    this.lastPathTarget = Vec2.clone(target);
-                }
-
-                if (physics.hasPath) {
-                    physics.tick(MAX_SPEED, ACCEL);
-                } else {
-                    physics.moveToDirect(target, MAX_SPEED, ACCEL);
-                }
+                const lPos = this.leader.position;
+                const ok = physics.moveToSmart(
+                    target, MAX_SPEED, ACCEL,
+                    (p) => physics.hasLineOfSight(p, lPos),
+                    undefined, 20
+                );
+                if (!ok) physics.moveToDirect(physics.getPosition(), MAX_SPEED, ACCEL);
             }
         })();
     }
