@@ -1,7 +1,6 @@
-import { Vec2 } from "planck";
 import { Actor } from "./actor.js";
 import { Camera } from "./camera.js";
-import { PhysicsManagerController, type PhysicsManagerOptions } from "../physics/physicsManager.js";
+import { PhysicsManagerController } from "../physics/physicsManager.js";
 import { DisciplineManagerController } from "../module/discipline/disciplineManager.js";
 
 export interface LevelOptions {

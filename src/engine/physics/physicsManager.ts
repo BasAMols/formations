@@ -1,13 +1,13 @@
-import { Vec2, World, Circle, Box, AABB } from "planck";
+import { Vec2, World, Circle, Box, AABB, Settings } from "planck";
 import type { Contact, ContactImpulse } from "planck";
 import { LogicController } from "../controller/logicController.js";
-import type { Actor } from "../core/actor.js";
+import type { Actor } from "../core/actor.ts";
 import { NavGrid } from "./navGrid.js";
 import { PhysicsController } from "./physicsController.js";
 import { StaticPhysicsController } from "./staticPhysicsController.js";
 import { perp } from "../util/math/vecUtil.js";
 
-const PHYSICS_TIMESTEP = 1 / 60;
+const PHYSICS_TIMESTEP = 1 / 30;
 const REPATH_IMPULSE_THRESHOLD = 200;
 const AVOIDANCE_FORCE = 50;
 const DEADLOCK_VELOCITY_THRESHOLD = 2.0;
@@ -30,6 +30,7 @@ export class PhysicsManagerController extends LogicController {
 
     constructor(options: PhysicsManagerOptions) {
         super();
+        Settings.lengthUnitsPerMeter = 100;
         this.world = new World({ gravity: new Vec2(0, 0) });
         this.navGrid = new NavGrid(options.worldWidth, options.worldHeight, options.cellSize ?? 8);
         this._padding = options.padding ?? 32;

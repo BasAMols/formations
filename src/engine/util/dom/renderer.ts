@@ -1,6 +1,6 @@
 import { Vec2 } from "planck";
-import { Canvas } from "./canvas.js";
 import type { RenderColor } from "../color.js";
+import type { Canvas } from "./canvas.js";
 
 export class Renderer {
     private canvas: Canvas;

@@ -1,7 +1,7 @@
 import { Vec2 } from "planck";
 import type { RenderController } from "../../controller/renderController.js";
 import type { Camera } from "../../core/camera.js";
-import type { Actor } from "../../core/actor.js";
+import type { InterpolatedEntry } from "../../render/renderManager.js";
 import { Dom } from "./dom.js";
 import { Renderer } from "./renderer.js";
 
@@ -68,9 +68,9 @@ export class Canvas extends Dom<'canvas'> {
         this._domElement.style.height = `${window.innerHeight}px`;
     }
 
-    renderFlat(renderables: Actor[], camera?: Camera): void {
+    renderFlat(entries: InterpolatedEntry[], camera?: Camera): void {
         this.clear.all();
-        renderables.sort((a, b) => (a.layer - b.layer) || (a.treeOrder - b.treeOrder));
+        entries.sort((a, b) => (a.layer - b.layer) || (a.treeOrder - b.treeOrder));
 
         if (camera) {
             this.ctx.save();
@@ -78,13 +78,12 @@ export class Canvas extends Dom<'canvas'> {
             this.ctx.translate(-camera.offset.x, -camera.offset.y);
         }
 
-        for (const actor of renderables) {
+        for (const entry of entries) {
             this.ctx.save();
-            const p = actor.worldTransform.p;
-            this.ctx.translate(p.x, p.y);
-            this.ctx.rotate(actor.worldTransform.q.getAngle());
-            for (const c of actor.getControllers<RenderController>('render')) {
-                c.render(actor, this);
+            this.ctx.translate(entry.x, entry.y);
+            this.ctx.rotate(entry.angle);
+            for (const c of entry.actor.getControllers<RenderController>('render')) {
+                c.render(entry.actor, this);
             }
             this.ctx.restore();
         }

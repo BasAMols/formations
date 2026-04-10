@@ -1,7 +1,7 @@
 import { Transform, Vec2 } from "planck";
 import type { Body } from "planck";
-import type { Controller } from "../controller/controller.js";
-import type { LogicController } from "../controller/logicController.js";
+import type { Controller } from "../controller/controller.ts";
+import type { LogicController } from "../controller/logicController.ts";
 
 export interface ActorInterface {
     size?: Vec2;
@@ -102,7 +102,7 @@ export class Actor {
         this.children.forEach(child => child.destroy());
     }
 
-    logicTick(parentXf: Transform, renderables: Actor[]): void {
+    logicTick(parentXf: Transform): void {
         if (!this._alive) return;
         this.children = this.children.filter(c => c._alive);
 
@@ -114,13 +114,8 @@ export class Actor {
             ? Transform.mul(parentXf, this.localTransform)
             : this.localTransform;
 
-        this.treeOrder = renderables.length;
-        if (this._controllers.some(c => c.type === 'render')) {
-            renderables.push(this);
-        }
-
         for (const child of this.children) {
-            child.logicTick(this.worldTransform, renderables);
+            child.logicTick(this.worldTransform);
         }
     }
 }

@@ -5,8 +5,8 @@ import { Discipline, type DisciplineInstance, type DisciplineProps } from "../..
 import { DisciplineController } from "../../../../engine/module/discipline/disciplineController.js";
 import type { LeaderDiscipline } from "../leader/leaderDiscipline.js";
 
-const MAX_SPEED = 150;
-const ACCEL = 0.08;
+const MAX_SPEED = 600;
+const ACCEL = 0.05;
 const SLOT_SPACING = 50;
 
 export interface FollowerInstance extends DisciplineInstance {

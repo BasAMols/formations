@@ -4,8 +4,8 @@ import { PhysicsController } from "../../../../engine/physics/physicsController.
 import { Discipline, type DisciplineInstance, type DisciplineProps } from "../../../../engine/module/discipline/discipline.js";
 import type { FollowerDiscipline } from "../follower/followerDiscipline.js";
 
-const SPEED = 100;
-const LEADER_ACCEL = 0.08;
+const SPEED = 400;
+const LEADER_ACCEL = 0.05;
 const ARRIVAL_THRESHOLD = 30;
 
 export interface LeaderDisciplineProps extends DisciplineProps {
