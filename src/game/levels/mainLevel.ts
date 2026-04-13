@@ -4,19 +4,35 @@ import { Level } from "../../engine/core/level.js";
 import { Wall } from "../actors/wall.js";
 import { Squad } from "../actors/soldiers/squadUnit.js";
 import { NullUnit } from "../actors/soldiers/null/nullUnit.js";
+import { campRenderSettings } from "../roman/camp/campRenderSettings.js";
+import { CampLayoutActor } from "../roman/camp/campLayoutActor.js";
+import { OUTER } from "../roman/camp/campLayout.js";
+import { METERS_TO_PIXELS } from "../roman/camp/contuberniumPlotActor.js";
+import { RenderController } from "../../engine/controller/renderController.js";
+import { Actor } from "../../engine/core/actor.js";
+import { Canvas } from "../../engine/util/dom/canvas.js";
+
+class BackgroundRenderer extends RenderController {
+    render(_actor: Actor, canvas: Canvas): void {
+        canvas.draw.rect(Vec2.zero(), new Vec2(this.width, this.height), new RenderColor(1, 1, 1, 1));
+    }
+    constructor(private width: number, private height: number) {
+        super();
+    }
+}
 
 export class MainLevel extends Level {
     constructor() {
-        const W = 3072 * 2;
-        const H = 1559 * 2;
+        const campPixels = OUTER * METERS_TO_PIXELS;
+        const margin = 100;
+        const W = campPixels + margin * 2;
+        const H = campPixels + margin * 2;
 
         super({ worldWidth: W, worldHeight: H, cellSize: 8, padding: 32 });
+        this.addController(new BackgroundRenderer(W, H));
 
-        this.buildWalls(W, H);
-        this.physics.rebuildNavGrid(this);
-
-        this.append(new Squad(300, 400));
-        this.append(new NullUnit(2700, 1200));
+        campRenderSettings.depth = 0;
+        this.append(new CampLayoutActor(margin, margin));
     }
 
     private buildWalls(W: number, H: number): void {

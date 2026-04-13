@@ -8,14 +8,13 @@ import { MainLevel } from "./levels/mainLevel.js";
 
 class BackgroundRenderer extends RenderController {
     render(_actor: Actor, canvas: Canvas): void {
-        canvas.draw.rect(Vec2.zero(), canvas.size, new RenderColor(0.305, 0.376, 0.188, 1));
+        canvas.draw.rect(Vec2.zero(), canvas.size, new RenderColor(1, 1, 1, 1));
     }
 }
 
 export class Game extends BaseGame {
     constructor() {
         super();
-        this.addController(new BackgroundRenderer());
         this.loadLevel(new MainLevel());
     }
 

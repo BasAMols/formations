@@ -7,7 +7,9 @@ import { Civilian, CivilianType } from "./individuals/civilian.js";
 import { PersonType, Person } from "./individuals/person.js";
 import { SoldierType, Soldier } from "./individuals/soldier.js";
 import { CohortType, Cohort, NC_CohortType } from "./infantry/cohort.js";
+import { Century } from "./infantry/century.js";
 import { FixedArray, fixedArray } from "./utility.js";
+import { BattleLegion } from "./battle/battleLegion.js";
 
 export type LegionType = {
     legate: PersonType;
@@ -61,13 +63,13 @@ export type NC_LegionType = LegionType & {
 
 export class Legion implements NC_LegionType {
     // --- command ---
-    readonly legate: Person;
-    readonly broadStripeTribune: Soldier;
-    readonly campPrefect: Soldier;
+    legate: Person;
+    broadStripeTribune: Soldier;
+    campPrefect: Soldier;
     readonly thinStripeTribunes: FixedArray<Civilian, 5>;
 
     // --- headquarters staff (officium) ---
-    readonly cornicularius: Civilian;
+    cornicularius: Civilian;
     readonly beneficiarii: Civilian[];
     readonly librarii: Civilian[];
     readonly frumentarii: Civilian[];
@@ -78,8 +80,8 @@ export class Legion implements NC_LegionType {
     readonly capsarii: Civilian[];
 
     // --- musicians / signalers ---
-    readonly aquilifer: Soldier;
-    readonly imaginifer: Soldier;
+    aquilifer: Soldier;
+    imaginifer: Soldier;
     readonly cornicines: Soldier[];
     readonly tubicines: Soldier[];
     readonly bucinatores: Soldier[];
@@ -127,6 +129,28 @@ export class Legion implements NC_LegionType {
         this.equitesLegionis = new EquitesLegionis();
         this.firstCohort = new Cohort(5, 20);
         this.cohorts = fixedArray(9, () => new Cohort(6, 10));
+
+        // homeUnit for legion-level personnel
+        this.legate.homeUnit = this;
+        this.broadStripeTribune.homeUnit = this;
+        this.campPrefect.homeUnit = this;
+        this.thinStripeTribunes.forEach(t => t.homeUnit = this);
+        this.cornicularius.homeUnit = this;
+        this.beneficiarii.forEach(b => b.homeUnit = this);
+        this.librarii.forEach(l => l.homeUnit = this);
+        this.frumentarii.forEach(f => f.homeUnit = this);
+        this.speculatores.forEach(s => s.homeUnit = this);
+        this.medici.forEach(m => m.homeUnit = this);
+        this.capsarii.forEach(c => c.homeUnit = this);
+        this.aquilifer.homeUnit = this;
+        this.imaginifer.homeUnit = this;
+        this.cornicines.forEach(c => c.homeUnit = this);
+        this.tubicines.forEach(t => t.homeUnit = this);
+        this.bucinatores.forEach(b => b.homeUnit = this);
+        this.lixae.forEach(l => l.homeUnit = this);
+        this.baggageMules.forEach(m => m.homeUnit = this);
+        this.officerHorses.forEach(h => h.homeUnit = this);
+        this.oxen.forEach(o => o.homeUnit = this);
     }
 
     get combatants(): SoldierType[] {
@@ -171,5 +195,69 @@ export class Legion implements NC_LegionType {
             ...this.firstCohort.animals,
             ...this.cohorts.flatMap(c => c.animals),
         ];
+    }
+
+    // --- deployment ---
+
+    deploy(): BattleLegion {
+        return new BattleLegion([
+            this.firstCohort.deploy(),
+            ...this.cohorts.map(c => c.deploy()),
+        ]);
+    }
+
+    // --- permanent reassignment ---
+
+    private get cohortsArr(): Cohort[] {
+        return [this.firstCohort, ...this.cohorts] as unknown as Cohort[];
+    }
+
+    private get regularCohortsArr(): Cohort[] {
+        return this.cohorts as unknown as Cohort[];
+    }
+
+    addCohort(cohort: Cohort): void {
+        this.regularCohortsArr.push(cohort);
+    }
+
+    removeCohort(cohort: Cohort): Cohort {
+        const arr = this.regularCohortsArr;
+        const idx = arr.indexOf(cohort);
+        if (idx === -1) throw new Error('Cohort not found in this legion');
+        arr.splice(idx, 1);
+        return cohort;
+    }
+
+    dissolveCohort(cohort: Cohort): void {
+        const arr = this.regularCohortsArr;
+        const idx = arr.indexOf(cohort);
+        if (idx === -1) throw new Error('Cohort not found in this legion');
+        arr.splice(idx, 1);
+
+        // Consolidate the dying cohort's weak centuries first
+        const centuriesArr = cohort.centuries as unknown as Century[];
+        const weakCenturies = [...centuriesArr].filter(
+            c => c.combatants.filter(s => s.status === 'alive').length < 4,
+        );
+        for (const weak of weakCenturies) {
+            cohort.dissolveCentury(weak);
+        }
+
+        // Transfer remaining whole centuries into surviving cohorts (weakest first)
+        const targets = [...this.cohortsArr];
+        targets.sort((a, b) => a.centuries.length - b.centuries.length);
+
+        for (const century of [...centuriesArr]) {
+            cohort.removeCentury(century);
+            if (targets.length > 0) {
+                targets[0].addCentury(century);
+                targets.sort((a, b) => a.centuries.length - b.centuries.length);
+            }
+        }
+    }
+
+    transferCentury(century: Century, from: Cohort, to: Cohort): void {
+        from.removeCentury(century);
+        to.addCentury(century);
     }
 }

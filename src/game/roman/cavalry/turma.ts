@@ -1,6 +1,6 @@
 import { Civilian, type CivilianType } from '../individuals/civilian.js';
 import { Soldier, type SoldierType } from '../individuals/soldier.js';
-import { Decurion, type DecurionType } from '../individuals/Decurion.js';
+import { Decurion, type DecurionType } from '../individuals/decurion.js';
 import { Animal, type AnimalType } from '../individuals/animal.js';
 import { MountedSoldier, type MountedSoldierType } from './mountedSoldier.js';
 import { CavalryFile, type CavalryFileType } from './cavalryFile.js';
