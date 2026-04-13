@@ -2,11 +2,13 @@ import { Vec2 } from "planck";
 import { Actor } from "../../../../engine/core/actor.js";
 import { PhysicsController } from "../../../../engine/physics/physicsController.js";
 import { Discipline, type DisciplineInstance, type DisciplineProps } from "../../../../engine/module/discipline/discipline.js";
+import { rotateToward } from "../../../../engine/util/math/vecUtil.js";
 import type { FollowerDiscipline } from "../follower/followerDiscipline.js";
 
 const SPEED = 400;
 const LEADER_ACCEL = 0.05;
 const ARRIVAL_THRESHOLD = 30;
+const TURN_SPEED = 0.15;
 
 export interface LeaderDisciplineProps extends DisciplineProps {
     followerDiscipline: FollowerDiscipline;
@@ -44,6 +46,8 @@ export class LeaderDiscipline extends Discipline {
                 const vel = physics.getVelocity();
                 if (vel.length() > 1) {
                     discipline.facing = Math.atan2(vel.y, vel.x);
+                    const targetAngle = discipline.facing - Math.PI / 2;
+                    actor.angle = rotateToward(actor.angle, targetAngle, TURN_SPEED);
                 }
 
                 const followers = discipline.leaderProps.followerDiscipline.units;

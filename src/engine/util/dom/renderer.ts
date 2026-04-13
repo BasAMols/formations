@@ -1,5 +1,6 @@
 import { Vec2 } from "planck";
 import type { RenderColor } from "../color.js";
+import type { SourceRect } from "../../sprite/spriteData.js";
 import type { Canvas } from "./canvas.js";
 
 export class Renderer {
@@ -31,7 +32,17 @@ export class Renderer {
         text: (text: string, position: Vec2, color: RenderColor) => {
             this.canvas.ctx.fillStyle = color.toString();
             this.canvas.ctx.fillText(text, position.x, position.y);
-        }
+        },
+        image: (image: CanvasImageSource, position: Vec2, size: Vec2) => {
+            this.canvas.ctx.drawImage(image, position.x, position.y, size.x, size.y);
+        },
+        sprite: (image: CanvasImageSource, source: SourceRect, position: Vec2, size: Vec2) => {
+            this.canvas.ctx.drawImage(
+                image,
+                source.x, source.y, source.w, source.h,
+                position.x, position.y, size.x, size.y,
+            );
+        },
     }
     clear = {
         all: () => {

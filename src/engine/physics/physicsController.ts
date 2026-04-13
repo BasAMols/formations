@@ -21,9 +21,7 @@ export class PhysicsController extends Controller {
     private _destination: Vec2 | null = null;
     private _awaitingRepath: boolean = false;
 
-    public filterGroupIndex: number = 0;
-
-    constructor(public radius: number, public density: number = 1, public linearDamping: number = 0) {
+    constructor(public radius: number, public density: number = 1, public linearDamping: number = 0, public filterGroupIndex: number = 0) {
         super();
     }
 

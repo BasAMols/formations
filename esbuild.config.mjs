@@ -1,5 +1,5 @@
 import * as esbuild from "esbuild";
-import { copyFile, mkdir } from "fs/promises";
+import { copyFile, cp, mkdir } from "fs/promises";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
@@ -12,6 +12,7 @@ async function copyStatics() {
   await mkdir(dist, { recursive: true });
   await copyFile(join(root, "public/index.html"), join(dist, "index.html"));
   await copyFile(join(root, "public/style.css"), join(dist, "style.css"));
+  await cp(join(root, "public/assets"), join(dist, "assets"), { recursive: true, force: true }).catch(() => {});
 }
 
 /** One browser bundle: all TS/JS dependencies → dist/index.js */

@@ -3,11 +3,14 @@ import { PhysicsController } from "../../../../engine/physics/physicsController.
 import type { Actor } from "../../../../engine/core/actor.js";
 import { Discipline, type DisciplineInstance, type DisciplineProps } from "../../../../engine/module/discipline/discipline.js";
 import { DisciplineController } from "../../../../engine/module/discipline/disciplineController.js";
+import { rotateToward } from "../../../../engine/util/math/vecUtil.js";
 import type { LeaderDiscipline } from "../leader/leaderDiscipline.js";
 
 const MAX_SPEED = 600;
 const ACCEL = 0.05;
 const SLOT_SPACING = 50;
+const SLOT_SPACING_Z = 70;
+const TURN_SPEED = 0.15;
 
 export interface FollowerInstance extends DisciplineInstance {
     readonly actor: Actor;
@@ -107,7 +110,7 @@ export class FollowerDiscipline extends Discipline<FollowerInstance> {
                 }
 
                 const localX = (this.side === 'L' ? -1 : 1) * this.depth * SLOT_SPACING;
-                const localY = this.depth * SLOT_SPACING;
+                const localY = this.depth * SLOT_SPACING_Z;
 
                 const leaderDisc = discipline.props.leaderDiscipline as LeaderDiscipline | null;
                 const facing = leaderDisc?.facing ?? 0;
@@ -128,6 +131,12 @@ export class FollowerDiscipline extends Discipline<FollowerInstance> {
                     undefined, 20
                 );
                 if (!ok) physics.moveToDirect(physics.getPosition(), MAX_SPEED, ACCEL);
+
+                const vel = physics.getVelocity();
+                if (vel.length() > 1) {
+                    const targetAngle = Math.atan2(vel.y, vel.x) - Math.PI / 2;
+                    actor.angle = rotateToward(actor.angle, targetAngle, TURN_SPEED);
+                }
             }
         })();
     }

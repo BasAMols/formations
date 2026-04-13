@@ -11,3 +11,10 @@ export function clampMagnitude(v: Vec2, min: number, max: number): Vec2 {
 export function perp(v: Vec2): Vec2 {
     return new Vec2(v.y, -v.x);
 }
+
+export function rotateToward(current: number, target: number, maxStep: number): number {
+    let diff = target - current;
+    diff = diff - Math.round(diff / (2 * Math.PI)) * 2 * Math.PI;
+    if (Math.abs(diff) <= maxStep) return target;
+    return current + Math.sign(diff) * maxStep;
+}

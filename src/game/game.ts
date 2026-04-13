@@ -8,7 +8,7 @@ import { MainLevel } from "./levels/mainLevel.js";
 
 class BackgroundRenderer extends RenderController {
     render(_actor: Actor, canvas: Canvas): void {
-        canvas.draw.rect(Vec2.zero(), canvas.size, RenderColor.black());
+        canvas.draw.rect(Vec2.zero(), canvas.size, new RenderColor(0.305, 0.376, 0.188, 1));
     }
 }
 
