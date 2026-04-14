@@ -6,11 +6,6 @@ import { Game as BaseGame } from "../engine/core/game.js";
 import type { Actor } from "../engine/core/actor.js";
 import { MainLevel } from "./levels/mainLevel.js";
 
-class BackgroundRenderer extends RenderController {
-    render(_actor: Actor, canvas: Canvas): void {
-        canvas.draw.rect(Vec2.zero(), canvas.size, new RenderColor(1, 1, 1, 1));
-    }
-}
 
 export class Game extends BaseGame {
     constructor() {
